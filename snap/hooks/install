@@ -2,9 +2,9 @@
 
 # Initialize configuration with default values
 snapctl set \
-    host="https://nwdigital.cloud" \
+    host="https://core.smashingwordpress.com" \
     interval=15 \
-
+    os="core" \
 
 #if [ "$(snapctl get daemon)" = "" ]; then
 #    if grep -q -e snap_core= -e snapd_recovery_mode= /proc/cmdline; then

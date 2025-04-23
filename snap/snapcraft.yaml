@@ -1,12 +1,12 @@
 name: nwd-agent # you probably want to 'snapcraft register <name>'
 base: core24 # the base snap is the execution environment for this snap
-version: '0.2' # just for humans, typically '1.2+git' or '1.3.2'
-summary: Sends IP address and HOSTNAME of this machine to another machine # 79 char long summary
+version: '0.3' # just for humans, typically '1.2+git' or '1.3.2'
+summary: Sends IP address, HOSTNAME and screenshot of this machine to another machine # 79 char long summary
 description: |
-  Sends IP address and hostname info to a server of my choice, every X seconds.
+  Sends IP address, hostname info and screenshot to a server of my choice, every X seconds. The screenshot must live in the users home directory and be named 'output.png'
 
 grade: stable # must be 'stable' to release into candidate/stable channels
-confinement: strict # use 'strict' once you have the right plugs and slots
+confinement: devmode # use 'strict' once you have the right plugs and slots
 
 platforms:
   amd64:
@@ -16,17 +16,51 @@ platforms:
     build-on: [arm64]
     build-for: [arm64]
 
+plugs:
+  snapd:
+    interface: snapd-control
+
 apps:
   nwd-agent:
+    command-chain: [ bin/set-env.sh ]
     command: bin/nwd-agent.sh
     daemon: simple
     restart-delay: 5s
     install-mode: enable
     start-timeout: 5s
+    environment:
+      GS_LIB: "$SNAP/usr/share/ghostscript/$(ghostscript --version | awk '{print $1}')/Resource/Init"
+      MAGICK_CONFIGURE_PATH: "$SNAP/usr/local/etc/ImageMagick-7"
+      LD_LIBRARY_PATH: "$SNAP/usr/local/lib:$SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/share/ghostscript/*/Resource/Init"
     plugs:
       - network
+      - home
+      - network-bind
+      - x11
+      - wayland
+      - opengl
+      #- removable-media
+      #- system-observe
+      #- mount-observe
+      #- account-control
+
+  imagick:
+    command-chain: [ bin/set-env.sh ]
+    command: usr/local/bin/magick
+    environment:
+      GS_LIB: "$SNAP/usr/share/ghostscript/$(ghostscript --version | awk '{print $1}')/Resource/Init"
+      MAGICK_CONFIGURE_PATH: "$SNAP/usr/local/etc/ImageMagick-7"
+      LD_LIBRARY_PATH: "$SNAP/usr/local/lib:$SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/share/ghostscript/*/Resource/Init"
+    plugs:
+      - network
+      - home
+      - network-bind
+      - x11
+      - wayland
+      - opengl
 
 parts:
+
   nwd-agent:
     source: .
     # See 'snapcraft plugins'
@@ -36,7 +70,181 @@ parts:
     stage-packages:
       - curl
       - openssl
+      - sudo
+      - snap
     override-prime: |
       # Fix resource permissions
       chmod +rx $CRAFT_STAGE/bin/nwd-agent.sh
       snapcraftctl prime
+
+  envs:
+    plugin: dump
+    source: .
+    organize:
+      set-env.sh: bin/set-env.sh
+
+  imagick:
+    plugin: autotools
+    source-type: git
+    source: https://github.com/ImageMagick/ImageMagick.git
+    organize:
+      imagick: bin/
+    build-packages:
+       - libc-dev-bin
+       - libfreetype6-dev
+       - libfribidi-dev
+       - libgdk-pixbuf2.0-dev
+       - libglib2.0-dev
+       - libglib2.0-dev-bin
+       - libgraphite2-dev
+       - libgts-0.7-5
+       - libice-dev
+       - libicu-dev
+       - libilmbase-dev
+       - libitm1
+       - libpotrace0
+       - libptexenc1
+       - libpthread-stubs0-dev
+       - libquadmath0
+       - librsvg2-bin
+       - libharfbuzz-dev
+       - libharfbuzz-gobject0
+       - libraqm-dev
+       - libpng-dev
+       - libfontconfig1-dev
+       - libc6-dev
+       - libcairo-script-interpreter2
+       - libcairo2-dev
+       - fonts-lmodern
+       - libde265-dev
+       - libdjvulibre-dev
+       - libexif-dev
+       - libfftw3-bin
+       - libexpat1-dev
+       - libfftw3-dev
+       - libfftw3-quad3
+       - libfile-stripnondeterminism-perl
+       - libfftw3-long3
+       - libghc-bzlib-dev
+       - libgoogle-perftools-dev
+       - libgraphviz-dev
+       - libgs-dev
+       - libheif-dev
+       - libjbig-dev
+       - libjemalloc-dev
+       - libjpeg-dev
+       - libjpeg-turbo8-dev
+       - libjpeg8-dev
+       - liblab-gamut1
+       - liblsan0
+       - libltdl-dev
+       - libmime-charset-perl
+       - libpcre16-3
+       - libpcre3-dev
+       - libpcre32-3
+       - libpcrecpp0v5
+       - libperl-dev
+       - libpixman-1-dev
+       - libsigsegv2
+       - libsm-dev
+       - libsombok3
+       - libtexluajit2
+       - libtiff5-dev
+       - libtool
+       - libtool-bin
+       - libtsan0
+       - libunicode-linebreak-perl
+       - libwmf-dev
+       - liblcms2-dev
+       - liblqr-1-0-dev
+       - liblzma-dev
+       - libopenexr-dev
+       - libopenjp2-7-dev
+       - libpango1.0-dev
+       - libraw-dev
+       - librsvg2-dev
+       - libtiff-dev
+       - libwebp-dev
+       - libxml2-dev
+       - libxml2-utils
+       - libzip-dev
+       - libzstd-dev
+       - libx11-dev
+       - libxau-dev
+       - libxrender-dev
+       - libxt-dev
+       - libzzip-0-13
+       - linux-libc-dev
+       - libxcb-render0-dev
+       - libxcb-shm0-dev
+       - libxcb1-dev
+       - libxdmcp-dev
+       - libxext-dev
+       - libxft-dev
+       - preview-latex-style
+       - tex-common
+       - texlive-base
+       - texlive-binaries
+       - texlive-extra-utils
+       - texlive-font-utils
+       - texlive-fonts-recommended
+       - texlive-latex-base
+       - texlive-latex-extra
+       - texlive-latex-recommended
+       - texlive-pictures
+       - x11proto-core-dev
+       - x11proto-dev
+       - x11proto-xext-dev
+       - xorg-sgml-doctools
+       - xsltproc
+       - xtrans-dev
+       - zlib1g-dev
+    stage-packages:
+       - libgomp1
+       - ghostscript
+       - libxext6
+       - libwebpdemux2
+       - libwebpmux3
+       - libopenexr-3-1-30
+       - libimath-3-1-29t64
+       - libxrender1
+       - libcairo2
+       - libcgraph6
+       - libcdt5
+       - libdatrie1
+       - libdjvulibre21
+       - libgraphite2-3
+       - libfribidi0
+       - libgvc6
+       - libgvpr2
+       - libharfbuzz0b
+       - libheif1
+       - libicu74
+       - liblcms2-2
+       - liblqr-1-0
+       - libltdl7
+       - libpango-1.0-0
+       - libpangocairo-1.0-0
+       - libpangoft2-1.0-0
+       - libpathplan4
+       - libpixman-1-0
+       - libraw23t64
+       - libthai0
+       - libxcb-render0
+       - libxcb-shm0
+       - libxml2
+       - libzip4t64
+       - libraqm0
+
+lint:
+  ignore:
+    - classic
+    - library:
+        - usr/local/lib/libMagick++-7.Q16HDRI.so.5.0.0
+        - usr/lib/x86_64-linux-gnu/libOpenEXRUtil-3_1.so.30.5.1
+        - usr/lib/x86_64-linux-gnu/libicuio.so.74.2
+        - usr/lib/x86_64-linux-gnu/libicutest.so.74.2
+        - usr/lib/x86_64-linux-gnu/libraw.so.23.0.0
+        - usr/lib/x86_64-linux-gnu/libgvpr.so.2.0.0
+        - usr/lib/x86_64-linux-gnu/libicutu.so.74.2
+        - usr/lib/x86_64-linux-gnu/libicui18n.so.74.2
