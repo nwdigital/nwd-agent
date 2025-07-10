@@ -1,11 +1,11 @@
 name: nwd-agent
 base: core24
-version: '0.9'
+version: '1.0'
 summary: Sends IP address, HOSTNAME and screenshot of this machine to another machine
 description: |
   Sends IP address, hostname info and screenshot to a server of my choice, every X seconds. The screenshot must live in the users home directory and be named 'output.png'
 grade: stable
-confinement: classic
+confinement: strict
 
 platforms:
   amd64:
@@ -15,6 +15,13 @@ platforms:
     build-on: [arm64]
     build-for: [arm64]
 
+plugs:
+  ubuntu-frame-common:
+    interface: system-files
+    write:
+    - /var/snap/ubuntu-frame/common
+    - /usr/bin/snap
+  
 apps:
   nwd-agent:
     command-chain: [ bin/set-env.sh ]
@@ -35,6 +42,7 @@ apps:
       - x11
       - wayland
       - opengl
+      - ubuntu-frame-common
 
   imagick:
     command-chain: [ bin/set-env.sh ]
@@ -51,6 +59,7 @@ apps:
       - x11
       - wayland
       - opengl
+      - ubuntu-frame-common
 
 parts:
   nwd-agent:
