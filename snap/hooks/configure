@@ -20,7 +20,7 @@ validate_int() {
 validate_os() {
     os=$1
     case "$os" in
-        os|core)
+        core|desktop)
             ;;
         *)
             echo "Error: OS \"${os}\" needs to be either unset or 'core' for Ubuntu Core or 'desktop' for Ubuntu Desktop"
