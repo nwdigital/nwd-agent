@@ -1,12 +1,11 @@
-name: nwd-agent # you probably want to 'snapcraft register <name>'
-base: core24 # the base snap is the execution environment for this snap
-version: '0.3' # just for humans, typically '1.2+git' or '1.3.2'
-summary: Sends IP address, HOSTNAME and screenshot of this machine to another machine # 79 char long summary
+name: nwd-agent
+base: core24
+version: '0.9'
+summary: Sends IP address, HOSTNAME and screenshot of this machine to another machine
 description: |
   Sends IP address, hostname info and screenshot to a server of my choice, every X seconds. The screenshot must live in the users home directory and be named 'output.png'
-
-grade: stable # must be 'stable' to release into candidate/stable channels
-confinement: devmode # use 'strict' once you have the right plugs and slots
+grade: stable
+confinement: classic
 
 platforms:
   amd64:
@@ -15,10 +14,6 @@ platforms:
   arm64:
     build-on: [arm64]
     build-for: [arm64]
-
-plugs:
-  snapd:
-    interface: snapd-control
 
 apps:
   nwd-agent:
@@ -33,16 +28,13 @@ apps:
       MAGICK_CONFIGURE_PATH: "$SNAP/usr/local/etc/ImageMagick-7"
       LD_LIBRARY_PATH: "$SNAP/usr/local/lib:$SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/share/ghostscript/*/Resource/Init"
     plugs:
-      - network
       - home
+      - network
+      - network-status
       - network-bind
       - x11
       - wayland
       - opengl
-      #- removable-media
-      #- system-observe
-      #- mount-observe
-      #- account-control
 
   imagick:
     command-chain: [ bin/set-env.sh ]
@@ -52,26 +44,27 @@ apps:
       MAGICK_CONFIGURE_PATH: "$SNAP/usr/local/etc/ImageMagick-7"
       LD_LIBRARY_PATH: "$SNAP/usr/local/lib:$SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/share/ghostscript/*/Resource/Init"
     plugs:
-      - network
       - home
+      - network
+      - network-status
       - network-bind
       - x11
       - wayland
       - opengl
 
 parts:
-
   nwd-agent:
     source: .
-    # See 'snapcraft plugins'
     plugin: dump
     organize:
       nwd-agent.sh: bin/nwd-agent.sh
+      app.py: bin/app.py
     stage-packages:
       - curl
       - openssl
       - sudo
       - snap
+      - libglib2.0-dev
     override-prime: |
       # Fix resource permissions
       chmod +rx $CRAFT_STAGE/bin/nwd-agent.sh
@@ -248,3 +241,6 @@ lint:
         - usr/lib/x86_64-linux-gnu/libgvpr.so.2.0.0
         - usr/lib/x86_64-linux-gnu/libicutu.so.74.2
         - usr/lib/x86_64-linux-gnu/libicui18n.so.74.2
+        - usr/lib/x86_64-linux-gnu/libpcre2-16.so.0.11.2
+        - usr/lib/x86_64-linux-gnu/libpcre2-32.so.0.11.2
+        - usr/lib/x86_64-linux-gnu/libpcre2-posix.so.3.0.4
