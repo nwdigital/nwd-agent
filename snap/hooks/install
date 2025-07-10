@@ -2,9 +2,10 @@
 
 # Initialize configuration with default values
 snapctl set \
-    host="https://core.smashingwordpress.com" \
-    interval=15 \
+    host="https://iob.fcpotawatomi.com/servers" \
+    interval=60 \
     os="core" \
+    orientation="portrait" \
 
 #if [ "$(snapctl get daemon)" = "" ]; then
 #    if grep -q -e snap_core= -e snapd_recovery_mode= /proc/cmdline; then
